@@ -1,12 +1,13 @@
 module tri_buf (a, b, enable);
-  input a, enable;
-  output reg b;
+  input [15:0] a;
+  input enable;
+  output reg [15:0] b;
 
   always @(enable, a, b) begin
     if (enable) begin
       b = a;
     end else begin
-      b = 1'bz;
+      b = 16'bz;
     end
   end
 endmodule

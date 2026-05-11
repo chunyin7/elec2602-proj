@@ -1,4 +1,4 @@
-module register (D, clk, rst, Q);
+module d_ff (D, clk, rst, Q);
   input [15:0] D;
   input clk;
   output reg [15:0] Q;
