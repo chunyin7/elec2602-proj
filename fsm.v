@@ -1,6 +1,6 @@
-module fsm (instruction, clk, load_reg, drive_reg, add_or_sub, immediate, imm_enable);
+module fsm (instruction, clk, rst, load_reg, drive_reg, add_or_sub, immediate, imm_enable);
   input [15:0] instruction;
-  input clk;
+  input clk, rst;
   output reg [2:0] load_reg, drive_reg;
   output reg [15:0] immediate;
   output reg add_or_sub, imm_enable;
@@ -100,11 +100,15 @@ module fsm (instruction, clk, load_reg, drive_reg, add_or_sub, immediate, imm_en
     endcase
   end
 
-  always @(posedge clk) begin
-    cur_state <= next_state;
-
-    if (cur_state == 4'b0001) // LDI part 1
-      ldi_reg_code <= instruction[11:10];
+  always @(posedge clk, posedge rst) begin
+    if (rst) begin
+      cur_state <= 4'b0000;
+      ldi_reg_code <= 3'b000;
+    end else begin
+      cur_state <= next_state;
+      if (cur_state == 4'b0001) // LDI part 1
+        ldi_reg_code <= instruction[11:10];
+    end
   end
 
 endmodule

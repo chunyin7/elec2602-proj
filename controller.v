@@ -28,6 +28,7 @@ module controller (instruction, clk, rst);
   fsm fsm (
     .instruction(instruction),
     .clk(clk),
+    .rst(rst),
     .load_reg(load_reg_code),
     .drive_reg(drive_reg_code),
     .add_or_sub(add_or_sub),

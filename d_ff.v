@@ -5,9 +5,9 @@ module d_ff (D, clk, rst, Q);
 
   always @(posedge clk, posedge rst) begin
     if (rst==1'b1) begin
-      Q = 0;
+      Q <= 0;
     end else begin
-      Q = D;
+      Q <= D;
     end
   end
 endmodule
