@@ -16,6 +16,7 @@ module fsm (instruction, clk, load_reg, drive_reg, add_or_sub, immediate, imm_en
     drive_reg = 3'b000;
     add_or_sub = 0;
     imm_enable = 0;
+    immediate = 16'b0;
 
     case (cur_state)
       4'b0000: begin // decoding
@@ -54,21 +55,21 @@ module fsm (instruction, clk, load_reg, drive_reg, add_or_sub, immediate, imm_en
       // ADD part 1
       4'b0100 : begin
         drive_reg = instruction[11:10]; // Rx
-        load_reg = 3'b100; // A
+        load_reg = 3'b100; // A (index 4)
         next_state = 4'b0101; // ADD part 2
       end
 
       // ADD part 2
       4'b0101 : begin
         drive_reg = instruction[9:8]; // Ry
-        load_reg = 3'b101; // G
+        load_reg = 3'b011; // G (index 3)
         add_or_sub = 0; // add
         next_state = 4'b0110;
       end
 
       // ADD part 3
       4'b0110 : begin
-        drive_reg = 3'b101; // G
+        drive_reg = 3'b011; // G (index 3)
         load_reg = instruction[11:10]; // Rx
         next_state = 4'b0000;
       end
@@ -76,21 +77,21 @@ module fsm (instruction, clk, load_reg, drive_reg, add_or_sub, immediate, imm_en
       // SUB part 1
       4'b0111: begin
         drive_reg = instruction[11:10]; // Rx
-        load_reg = 3'b100; // A
+        load_reg = 3'b100; // A (index 4)
         next_state = 4'b1000; // ADD part 2
       end
 
       // SUB part 2
       4'b1000 : begin
         drive_reg = instruction[9:8]; // Ry
-        load_reg = 3'b101; // G
+        load_reg = 3'b011; // G (index 3)
         add_or_sub = 1; // sub
         next_state = 4'b1001;
       end
 
       // SUB part 3
       4'b1001 : begin
-        drive_reg = 3'b101; // G
+        drive_reg = 3'b011; // G (index 3)
         load_reg = instruction[11:10]; // Rx
         next_state = 4'b0000;
       end
