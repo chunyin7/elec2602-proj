@@ -5,110 +5,111 @@ module fsm (instruction, clk, rst, load_reg, drive_reg, add_or_sub, immediate, i
   output reg [15:0] immediate;
   output reg add_or_sub, imm_enable;
 
-  reg [3:0] cur_state; // 8 states
+  reg [3:0] cur_state; 
   reg [3:0] next_state;
+  reg [2:0] ldi_reg_code; 
+  
+  always @(posedge clk or posedge rst) begin
+    
+    if (rst) begin
+      cur_state <= 4'b0000;
+      ldi_reg_code <= 3'b000;
+    end 
+    
+    else begin
+      cur_state <= next_state;
 
-  reg [2:0] ldi_reg_code; // helper as ldi is 2 words
+      if (cur_state == 4'b0000 && instruction[15:12] == 4'b0000) begin
+        ldi_reg_code <= instruction[11:10];
+      end
+
+    end
+    
+  end
 
   always @(*) begin
-    // reset all signals
-    load_reg = 3'b000;
-    drive_reg = 3'b000;
+    // defaults 
+    load_reg = 3'b111;
+    drive_reg = 3'b111;
     add_or_sub = 0;
     imm_enable = 0;
     immediate = 16'b0;
+    next_state = cur_state; 
 
     case (cur_state)
-      4'b0000: begin // decoding
+      4'b0000: begin // Decoding
         case (instruction[15:12])
-          4'b0000 : next_state = 4'b0001; // LDI part 1
+          4'b0000 : next_state = 4'b0001; // LDI
           4'b0001 : next_state = 4'b0011; // MOV
-          4'b0010 : next_state = 4'b0100; // ADD part 1
-          4'b0011 : next_state = 4'b0111; // SUB part 1
-          default : next_state = 4'b0000; // invalid -> waiting state
+          4'b0010 : next_state = 4'b0100; // ADD
+          4'b0011 : next_state = 4'b0111; // SUB
+          default : next_state = 4'b0000;
         endcase
       end
+      
+      4'b0001 : next_state = 4'b0010; 
 
-      // LDI part 1
-      4'b0001 : begin
-        // LDI reg code is assigned on clock edge below
-        next_state = 4'b0010; // LDI part 2
-      end
-
-      // LDI part 2
-      4'b0010 : begin
-        // load immediate value to bus
-        immediate = instruction;
+      // LDI 2
+      4'b0010 : begin 
+        drive_reg = 3'b101; 
+        load_reg = ldi_reg_code; 
         imm_enable = 1;
-        // load Rx
-        load_reg = ldi_reg_code;
+        immediate = instruction; 
         next_state = 4'b0000;
       end
 
       // MOV
       4'b0011 : begin
-        load_reg = instruction[11:10]; // Rx
-        drive_reg = instruction[9:8]; // Ry
+        load_reg = instruction[11:10]; 
+        drive_reg = instruction[9:8]; 
         next_state = 4'b0000;
       end
 
-      // ADD part 1
+      // ADD 1
       4'b0100 : begin
-        drive_reg = instruction[11:10]; // Rx
-        load_reg = 3'b100; // A (index 4)
-        next_state = 4'b0101; // ADD part 2
+        drive_reg = instruction[11:10]; 
+        load_reg = 3'b100; // A 
+        next_state = 4'b0101; 
       end
 
-      // ADD part 2
+      // ADD 2
       4'b0101 : begin
-        drive_reg = instruction[9:8]; // Ry
-        load_reg = 3'b011; // G (index 3)
-        add_or_sub = 0; // add
+        drive_reg = instruction[9:8]; 
+        load_reg = 3'b011; // G 
+        add_or_sub = 0; 
         next_state = 4'b0110;
       end
 
-      // ADD part 3
+      // ADD 3 
       4'b0110 : begin
-        drive_reg = 3'b011; // G (index 3)
-        load_reg = instruction[11:10]; // Rx
-        next_state = 4'b0000;
+        drive_reg = 3'b011;            
+        load_reg = instruction[11:10]; 
+        next_state = 4'b0000;          
       end
 
-      // SUB part 1
+      // SUB 1
       4'b0111: begin
-        drive_reg = instruction[11:10]; // Rx
-        load_reg = 3'b100; // A (index 4)
-        next_state = 4'b1000; // ADD part 2
+        drive_reg = instruction[11:10]; 
+        load_reg = 3'b100; // A
+        next_state = 4'b1000; 
       end
 
-      // SUB part 2
+      // SUB 2
       4'b1000 : begin
-        drive_reg = instruction[9:8]; // Ry
-        load_reg = 3'b011; // G (index 3)
-        add_or_sub = 1; // sub
+        drive_reg = instruction[9:8]; 
+        load_reg = 3'b011; // G 
+        add_or_sub = 1; 
         next_state = 4'b1001;
       end
 
-      // SUB part 3
+      // SUB 3 
       4'b1001 : begin
-        drive_reg = 3'b011; // G (index 3)
-        load_reg = instruction[11:10]; // Rx
-        next_state = 4'b0000;
+        drive_reg = 3'b011;            
+        load_reg = instruction[11:10]; 
+        next_state = 4'b0000;          
       end
 
       default : next_state = 4'b0000;
     endcase
   end
-
-  always @(posedge clk, posedge rst) begin
-    if (rst) begin
-      cur_state <= 4'b0000;
-      ldi_reg_code <= 3'b000;
-    end else begin
-      cur_state <= next_state;
-      if (cur_state == 4'b0001) // LDI part 1
-        ldi_reg_code <= instruction[11:10];
-    end
-  end
-
 endmodule
