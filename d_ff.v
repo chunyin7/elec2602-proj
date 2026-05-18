@@ -1,10 +1,10 @@
 module d_ff (D, clk, rst, Q);
   input [15:0] D;
-  input clk;
+  input clk, rst;
   output reg [15:0] Q;
 
   always @(posedge clk, posedge rst) begin
-    if (rst==1'b1) begin
+    if (rst == 1'b1) begin
       Q <= 0;
     end else begin
       Q <= D;
